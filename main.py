@@ -5,14 +5,6 @@ import os
 
 TASKS_FILE = "tasks.json"
 
-concept_aquiles = """
-  1 - VALIDATE IF THE FILE EXIST (IF NOT, CREATE AN EMPTY LIST AND RETURN IT) ✅
-  2 - READ THE FILE TO KNOW OUR CURRENT TASKS ✅
-  3 - SAVE THOSE TASKS IN A VARIABLE ✅
-  4 - ADD OUR NEW TASK TO THE VARIABLE ✅
-  5 - SAVE THE VARIABLE WITH LIST INTO THE FILE ✅
-"""
-
 def load_tasks():
   if not os.path.exists(TASKS_FILE):
       return []
@@ -39,20 +31,6 @@ def add_task(description):
   print(f"Task added successfully (ID: {task_id})")
 
 
-delete_algorithm = """
-1. llamarlos
-2. iterar por todos y ver si existe
-3. Si existe, borrarlo. Si no exite, dar feedback
-4. mostrar la lista actualizada
-"""
-
-new_algo = """
- - load all tasks
- - iterate over all tasks to check if searched id exist or not
- - if id doesnt exist print an error
- - if id exists iterate again to filter
-"""
-
 def task_exist(id):
     tasks = load_tasks()
     current_state = False
@@ -73,6 +51,42 @@ def delete_task(id):
   save_tasks(filtered_tasks)
   print("Task successfully deleted")
 
+
+def update_task(id, new_description):
+  tasks = load_tasks()  
+  exist = task_exist(id)
+  now = datetime.now().isoformat()
+
+  if not exist:
+    print("This task does not exist")
+    return
+  
+  for i in tasks:
+    if i['id'] == id:
+      i['description'] = new_description
+      i['updatedAt'] = now
+  save_tasks(tasks)
+  print(f"Task with id:{id} successfully updated")
+
+
+def mark_task(id, new_status):
+  tasks = load_tasks()
+  exist = task_exist(id)
+  now = datetime.now().isoformat()
+
+  if not exist:
+    print("This task does not exist")
+    return
+  
+  for i in tasks:
+    if i['id'] == id:
+      i['status'] = new_status
+      i['updatedAt'] = now
+      save_tasks(tasks)
+      print(f"Task with id: {id} successfully marked as {new_status}")
+      return
+
+  
 def main():
   parser = argparse.ArgumentParser(description='Task tracker CLI')
   subparsers = parser.add_subparsers(dest='command')
@@ -85,16 +99,31 @@ def main():
   parser_delete = subparsers.add_parser("delete", help="Delete an existing task")
   parser_delete.add_argument('id', type = int, help = 'task id')
 
+  # update task
+  parser_update = subparsers.add_parser("update", help="Update an existing task")
+  parser_update.add_argument('id', type = int, help = 'task id')
+  parser_update.add_argument('description', type=str, help='New description of the task')
+
+  # mark task
+  parser_mark_in_progress = subparsers.add_parser("mark-in-progress", help="Mark a task as in progress")
+  parser_mark_in_progress.add_argument('id', type = int, help = 'task id')
+
+  parser_mark_done = subparsers.add_parser("mark-done", help="Marked a task as done")
+  parser_mark_done.add_argument('id', type = int, help = 'task id')
+
 
   args = parser.parse_args()
-
-  #print(args)
 
   if args.command == 'add':
     add_task(args.description)
   elif args.command == 'delete':
     delete_task(args.id)
-
+  elif args.command == 'update':
+    update_task(args.id, args.description)
+  elif args.command == 'mark-in-progress':
+    mark_task(args.id, "in-progress")
+  elif args.command == 'mark-done':
+    mark_task(args.id, "done")
 
 
 if __name__ == '__main__':
