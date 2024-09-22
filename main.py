@@ -86,6 +86,11 @@ def mark_task(id, new_status):
       print(f"Task with id: {id} successfully marked as {new_status}")
       return
 
+def list_tasks(status=None):
+  tasks = load_tasks()
+  filtered_tasks = tasks if not status else [task for task in tasks if task["status"] == status]
+  for task in filtered_tasks:
+    print(f"{task["id"]}: {task["description"]} - {task["status"]}")
   
 def main():
   parser = argparse.ArgumentParser(description='Task tracker CLI')
@@ -104,27 +109,31 @@ def main():
   parser_update.add_argument('id', type = int, help = 'task id')
   parser_update.add_argument('description', type=str, help='New description of the task')
 
-  # mark task
+  # mark task as in progress
   parser_mark_in_progress = subparsers.add_parser("mark-in-progress", help="Mark a task as in progress")
   parser_mark_in_progress.add_argument('id', type = int, help = 'task id')
 
+  # mark task as done
   parser_mark_done = subparsers.add_parser("mark-done", help="Marked a task as done")
   parser_mark_done.add_argument('id', type = int, help = 'task id')
 
+  # list tasks
+  parser_list = subparsers.add_parser("list", help="List tasks")
+  parser_list.add_argument("status", nargs="?", type=str, help="Filter task by status (todo, in-progress, done)")
 
   args = parser.parse_args()
 
-  if args.command == 'add':
-    add_task(args.description)
-  elif args.command == 'delete':
-    delete_task(args.id)
-  elif args.command == 'update':
-    update_task(args.id, args.description)
-  elif args.command == 'mark-in-progress':
-    mark_task(args.id, "in-progress")
-  elif args.command == 'mark-done':
-    mark_task(args.id, "done")
+  commands = {
+    "add": lambda: add_task(args.description),
+    "update": lambda: update_task(args.id, args.description),
+    "delete": lambda: delete_task(args.id),
+    "list": lambda: list_tasks(args.status),
+    "mark-done": lambda: mark_task(args.id, "done"),
+    "mark-in-progress": lambda: mark_task(args.id, "in-progress")
+  }
 
+  command_function = commands.get(args.command, lambda: parser.print_help())
+  command_function()
 
 if __name__ == '__main__':
   main()
